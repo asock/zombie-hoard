@@ -1,0 +1,38 @@
+{
+  "name": "openclaw-skill-zombie-hoard",
+  "version": "2.0.0",
+  "description": "Deploy a parallel swarm of zombie LLM agents to deeply learn any topic",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "zombie-hoard": "./index.js"
+  },
+  "scripts": {
+    "test": "node index.js quick \"JavaScript closures\"",
+    "graveyard": "node index.js graveyard",
+    "status": "node index.js status",
+    "lint": "node --check index.js lib/zombie.js lib/hoard.js lib/necromancer.js lib/storage.js lib/display.js lib/lore.js"
+  },
+  "keywords": [
+    "openclaw",
+    "skill",
+    "ai",
+    "learning",
+    "agents",
+    "llm",
+    "parallel",
+    "zombie",
+    "hoard"
+  ],
+  "author": "hellsy.net",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "cli-table3": "^0.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
