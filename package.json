@@ -11,7 +11,7 @@
     "test": "node index.js quick \"JavaScript closures\"",
     "graveyard": "node index.js graveyard",
     "status": "node index.js status",
-    "lint": "node --check index.js lib/zombie.js lib/hoard.js lib/necromancer.js lib/storage.js lib/display.js lib/lore.js"
+    "lint": "node --check index.js lib/llm.js lib/zombie.js lib/hoard.js lib/necromancer.js lib/storage.js lib/display.js lib/lore.js"
   },
   "keywords": [
     "openclaw",
@@ -28,9 +28,7 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "chalk": "^5.3.0",
-    "ora": "^8.0.1",
-    "cli-table3": "^0.6.3"
+    "chalk": "^5.3.0"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -33,16 +33,33 @@ Reads all zombie reports and raises a unified synthesis — executive summary, c
 ## Install
 
 ```bash
-git clone https://github.com/hellsy-net/zombie-hoard.git
+git clone https://github.com/asock/zombie-hoard.git
 cd zombie-hoard
 npm install
 ```
 
 ## Setup
 
+Zombie Hoard runs **locally by default** against any OpenAI-compatible LLM
+endpoint — Ollama, llama.cpp, vLLM, LM Studio, etc.
+
+```bash
+# 1. Start a local model server (example: Ollama)
+ollama serve &
+ollama pull llama3.2
+
+# 2. Run a hoard — no API key needed
+node index.js quick "WebSockets"
+```
+
+If no local server is reachable, Zombie Hoard will fall back to the Anthropic
+API automatically *iff* `ANTHROPIC_API_KEY` is set in the environment:
+
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
+
+To force a provider, set `ZOMBIE_PROVIDER=local` or `ZOMBIE_PROVIDER=anthropic`.
 
 ## Usage
 
@@ -84,11 +101,13 @@ node index.js status
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | *(required)* | Anthropic API key |
-| `ZOMBIE_MODEL` | `claude-sonnet-4-20250514` | LLM model to use |
+| `ZOMBIE_BASE_URL` | `http://localhost:11434/v1` | Local OpenAI-compatible endpoint |
+| `ZOMBIE_MODEL` | `llama3.2` (local) / `claude-sonnet-4-20250514` (anthropic) | Model name |
+| `ZOMBIE_PROVIDER` | *(auto)* | Force provider: `local` or `anthropic` |
+| `ANTHROPIC_API_KEY` | *(unset)* | Optional fallback if no local server is reachable |
 | `ZOMBIE_HOARD_SIZE` | `7` | Number of zombies (1-7) |
 | `ZOMBIE_MAX_TOKENS` | `1500` | Max tokens per zombie response |
-| `ZOMBIE_CONCURRENCY` | `4` | Max parallel API calls |
+| `ZOMBIE_CONCURRENCY` | `4` | Max parallel calls |
 | `ZOMBIE_TIMEOUT` | `120000` | Per-zombie timeout in ms |
 | `ZOMBIE_RETRIES` | `1` | Retries per zombie on failure |
 | `ZOMBIE_STORAGE_DIR` | `~/.openclaw/zombie-hoard` | Knowledge storage path |
@@ -98,9 +117,10 @@ node index.js status
 ```
 index.js              CLI router + commands
 lib/
+  llm.js              Unified LLM client (local OpenAI-compat → Anthropic fallback)
   hoard.js            Orchestrator — spawns zombies with concurrency throttle
   zombie.js           Individual LLM agent with retry + timeout
-  necromancer.js       Synthesis agent
+  necromancer.js      Synthesis agent
   storage.js          Persistent graveyard (JSON index + markdown files)
   display.js          Terminal UI (chalk)
   lore.js             Return of the Living Dead mythology

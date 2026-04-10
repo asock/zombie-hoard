@@ -24,23 +24,12 @@ process.on('SIGINT', () => {
 });
 
 process.on('uncaughtException', (err) => {
-  // Sanitize any potential key leak in crash output
-  const msg = (err.message || '').replace(/sk-ant-[a-zA-Z0-9_-]{20,}/g, '[REDACTED]');
-  display.error(`Uncaught: ${msg}`);
+  display.error(`Uncaught: ${err.message || err}`);
   process.exit(1);
 });
 
-// ── Guard: API key ─────────────────────────────────────────────────────────────
-function assertApiKey() {
-  if (!process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY) {
-    display.error('No API key found. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.');
-    process.exit(1);
-  }
-}
-
 // ── Command: learn <topic> ─────────────────────────────────────────────────────
 async function cmdLearn(topic, mode = 'full') {
-  assertApiKey();
   if (!topic) { display.error('Provide a topic. Example: zombie-hoard learn "TypeScript generics"'); process.exit(1); }
 
   const roster = mode === 'quick'
@@ -97,7 +86,6 @@ function cmdGraveyard() {
 
 // ── Command: infect <topic> ─────────────────────────────────────────────────
 async function cmdInfect(topic) {
-  assertApiKey();
   if (!topic) { display.error('Provide a topic.'); process.exit(1); }
 
   const existing = storage.recall(topic);
@@ -225,11 +213,13 @@ function showHelp() {
     node index.js graveyard
 
   ENV VARS:
-    ANTHROPIC_API_KEY    Required (or OPENAI_API_KEY for OpenAI-compatible)
-    ZOMBIE_MODEL         LLM model (default: claude-sonnet-4-20250514)
+    ZOMBIE_BASE_URL      Local OpenAI-compatible endpoint (default: http://localhost:11434/v1)
+    ZOMBIE_MODEL         Model name (default: llama3.2 local, claude-sonnet-4-20250514 anthropic)
+    ZOMBIE_PROVIDER      Force provider: local|anthropic (default: auto-detect)
+    ANTHROPIC_API_KEY    Optional fallback if no local server is reachable
     ZOMBIE_HOARD_SIZE    Number of zombies 1-7 (default: 7)
     ZOMBIE_MAX_TOKENS    Tokens per zombie (default: 1500)
-    ZOMBIE_CONCURRENCY   Max parallel API calls (default: 4)
+    ZOMBIE_CONCURRENCY   Max parallel calls (default: 4)
     ZOMBIE_TIMEOUT       Per-zombie timeout ms (default: 120000)
     ZOMBIE_RETRIES       Retries per zombie on failure (default: 1)
     ZOMBIE_STORAGE_DIR   Knowledge storage path (default: ~/.openclaw/zombie-hoard)
