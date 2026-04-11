@@ -1,6 +1,6 @@
-# 🧟 ZOMBIE HOARD v2.0
+# 🧟 ZOMBIE HOARD v3.0
 
-> *Deploy a parallel swarm of zombie LLM agents to deeply learn any topic*
+> *One zombie in a trenchcoat. Doing it honestly.*
 
 An [OpenClaw](https://openclaw.dev) skill by [hellsy.net](https://hellsy.net)
 
@@ -8,25 +8,54 @@ Themed after *Return of the Living Dead* (1985) — Darrow Chemical Company. 2-4
 
 ---
 
-## What It Does
+## What changed in v3.0
 
-Zombie Hoard deploys **7 specialized AI agents in parallel**, each attacking a topic from a unique cognitive angle. A **Necromancer** synthesizes their findings into a unified knowledge document. Knowledge is saved to a persistent **graveyard** and compounds across re-runs via **hivemind memory**.
+v2.0 deployed "7 specialized zombie agents in parallel." That was theatre. They
+were all the same model with the same training data wearing different roleplay
+costumes. Seven cosplaying agents are not an ensemble; they're one mind in a
+trenchcoat. v2.0 also had **zero grounding** — every "fact" came from the
+model's frozen priors with no sources.
 
-### The Hoard
+v3.0 fixes the actual problems:
 
-| Zombie | Hunger | Perspective |
-|--------|--------|-------------|
-| 🧠 **CORTEX** | Core concepts | First principles, mental models, definitions |
-| 📜 **RELIC** | History | Origins, evolution, key milestones |
-| ⚙️ **GEARS** | Mechanics | Technical internals, implementation details |
-| 🩸 **VENOM** | Weaknesses | Failure modes, gotchas, controversies |
-| 🛠️ **CLAW** | Practical | Real-world patterns, actionable examples |
-| 🕸️ **SPORE** | Connections | Cross-domain analogies, related concepts |
-| 🔮 **PROPHET** | Future | Trends, emerging directions, what's next |
+- **Real sources.** The Hoard fetches Wikipedia (and any URLs you hand it),
+  feeds the actual text into the prompt, and the model is required to cite
+  inline as `[S1]`, `[S2]`, etc.
+- **One call, not eight.** The 7 cognitive angles (CORTEX, RELIC, GEARS, etc.)
+  survive as section headers in a single research call. Same coverage,
+  ~1/4 the tokens, no synthesis-glue tax.
+- **Structured claims with provenance.** Every bulleted claim is parsed out
+  with its section and source citations and stored in a JSON sidecar
+  (`claims/<slug>.json`) alongside the rendered markdown.
+- **Honest metrics.** No more self-graded "Hoard Score" or "Undead Index."
+  We measure: how many sources were cited, how many of the 7 sections were
+  covered, and the *grounding ratio* (claims with citations / total claims).
+- **Re-runs actually compound.** `infect` loads the prior structured claims,
+  passes them as context to the new run, and **diffs new claims against
+  old** by Jaccard similarity. You see what was added, removed, or kept —
+  not a smoothed-over echo of the previous synthesis.
+- **Contradictions are surfaced, not smoothed.** The prompt instructs the
+  Necromancer to put disagreements between sources (and disagreements with
+  prior knowledge) under a dedicated "Contradictions & Open Questions"
+  section. Disagreement is the most useful signal a re-run can produce.
 
-### The Necromancer (💀)
+The lore stays. The 🧟 emoji stay. The dignity, surprisingly, also stays.
 
-Reads all zombie reports and raises a unified synthesis — executive summary, cross-cutting insights, contradictions, infected topics for further exploration, and a final **Hoard Score** (0-10).
+---
+
+## The Seven Angles
+
+Still 7. They're now section headers, not separate calls.
+
+| Angle | Focus |
+|-------|-------|
+| 🧠 **CORTEX** | First principles, definitions, mental models |
+| 📜 **RELIC** | Origins, evolution, key milestones |
+| ⚙️ **GEARS** | Technical internals, implementation, trade-offs |
+| 🩸 **VENOM** | Failure modes, gotchas, honest criticism |
+| 🛠️ **CLAW** | Real-world patterns, actionable examples |
+| 🕸️ **SPORE** | Cross-domain analogies, related concepts |
+| 🔮 **PROPHET** | Trends, emerging directions, what's next |
 
 ---
 
@@ -49,11 +78,11 @@ ollama serve &
 ollama pull llama3.2
 
 # 2. Run a hoard — no API key needed
-node index.js quick "WebSockets"
+node index.js learn "WebSockets"
 ```
 
 If no local server is reachable, Zombie Hoard will fall back to the Anthropic
-API automatically *iff* `ANTHROPIC_API_KEY` is set in the environment:
+API automatically *iff* `ANTHROPIC_API_KEY` is set:
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
@@ -64,28 +93,34 @@ To force a provider, set `ZOMBIE_PROVIDER=local` or `ZOMBIE_PROVIDER=anthropic`.
 ## Usage
 
 ```bash
-# Full 7-zombie hoard
+# Grounded research run
 node index.js learn "TypeScript generics"
 
-# Quick 3-zombie hoard (CORTEX, GEARS, CLAW)
+# Smaller / faster (3 sources, lower token budget)
 node index.js quick "WebSockets"
 
-# Re-run to compound knowledge (hivemind memory)
+# Inject explicit URLs as additional sources
+node index.js learn "Custom Topic" --url https://example.com/spec.html
+
+# Skip source fetching entirely (ungrounded mode — model priors only)
+node index.js learn "Quantum Foo" --no-sources
+
+# Re-run and diff against prior structured claims
 node index.js infect "TypeScript generics"
 
 # Retrieve saved knowledge
 node index.js recall "TypeScript"
 
-# List all learned topics
+# List all stored topics
 node index.js graveyard
 
 # Delete a topic
 node index.js purge "Old Topic"
 
-# Export as JSON (pipeable)
+# Export structured JSON (sources + claims + sections)
 node index.js export "TypeScript" > typescript.json
 
-# Compare two topics
+# Compare two stored topics
 node index.js compare "React vs Vue"
 
 # Read the lore
@@ -105,11 +140,11 @@ node index.js status
 | `ZOMBIE_MODEL` | `llama3.2` (local) / `claude-sonnet-4-20250514` (anthropic) | Model name |
 | `ZOMBIE_PROVIDER` | *(auto)* | Force provider: `local` or `anthropic` |
 | `ANTHROPIC_API_KEY` | *(unset)* | Optional fallback if no local server is reachable |
-| `ZOMBIE_HOARD_SIZE` | `7` | Number of zombies (1-7) |
-| `ZOMBIE_MAX_TOKENS` | `1500` | Max tokens per zombie response |
-| `ZOMBIE_CONCURRENCY` | `4` | Max parallel calls |
-| `ZOMBIE_TIMEOUT` | `120000` | Per-zombie timeout in ms |
-| `ZOMBIE_RETRIES` | `1` | Retries per zombie on failure |
+| `ZOMBIE_MAX_SOURCES` | `5` | Max sources fetched per run |
+| `ZOMBIE_MAX_CHARS_PER_SOURCE` | `6000` | Per-source text cap |
+| `ZOMBIE_SOURCE_TIMEOUT` | `10000` | Source-fetch timeout in ms |
+| `ZOMBIE_MAX_TOKENS` | `4000` | Max tokens for the research call |
+| `ZOMBIE_TIMEOUT` | `180000` | LLM call timeout in ms |
 | `ZOMBIE_STORAGE_DIR` | `~/.openclaw/zombie-hoard` | Knowledge storage path |
 
 ## Architecture
@@ -118,25 +153,54 @@ node index.js status
 index.js              CLI router + commands
 lib/
   llm.js              Unified LLM client (local OpenAI-compat → Anthropic fallback)
-  hoard.js            Orchestrator — spawns zombies with concurrency throttle
-  zombie.js           Individual LLM agent with retry + timeout
-  necromancer.js      Synthesis agent
-  storage.js          Persistent graveyard (JSON index + markdown files)
+  sources.js          Wikipedia + URL fetching, HTML→text, source context builder
+  research.js         The honest research pipeline: ONE grounded call, structured output
+  hoard.js            Thin orchestrator: prior → fetch → research → diff → save
+  storage.js          Persistent graveyard: markdown + JSON sidecar with claims
   display.js          Terminal UI (chalk)
   lore.js             Return of the Living Dead mythology
+  util.js             Shared helpers (safeInt, jaccard, normalizeText)
 ```
 
-## v2.0 Changelog
+## What's stored on disk
 
-**Bugs Fixed:** `hoistScore` typo, NaN-safe parseInt, empty slugs for non-Latin topics, unclamped undead index, absolute path portability, dead code removal, no API timeout, no rate limit protection
+For each topic, two files:
 
-**Security:** API key leak prevention in errors, topic input length cap, restrictive file permissions (0o600), graveyard size cap (500 entries)
+```
+~/.openclaw/zombie-hoard/
+├── graveyard.json                 # index of all topics + objective metrics
+├── knowledge/
+│   └── typescript-generics.md     # human-readable rendered document
+└── claims/
+    └── typescript-generics.json   # structured: sources, sections, claims, metrics, diff
+```
 
-**New Features:** `purge`, `export --json`, `compare`, `--version`, retry with exponential backoff, graceful SIGINT, concurrency throttle, token cost estimation
+The JSON sidecar is what makes re-runs compound. It's also what `export`
+produces.
+
+## Honest limits (the new VENOM section)
+
+- **Wikipedia is one source.** The default fetcher only hits Wikipedia. Topics
+  Wikipedia covers poorly will produce thin grounding. Pass `--url` for
+  domain-specific sources.
+- **Citations can still be wrong.** The model can produce a `[S2]` referring to
+  source 2, but the claim itself can misread what source 2 actually says. We
+  surface invalid citations (referencing sources that don't exist) but we
+  don't verify that valid citations are accurate. Future work.
+- **Jaccard claim diffing is approximate.** "Same idea, very different wording"
+  may slip through and look like an added claim. Surfacing more change than
+  reality is the safer failure mode.
+- **No web crawling beyond user URLs.** No JS rendering, no auth, no rate-limit
+  awareness. The fetcher is intentionally simple.
+- **Single-call quality is bottlenecked by the model.** A small local model
+  will produce a small local-model-quality result. The architecture isn't
+  magic; it just stops being dishonest about the magic.
 
 ## The Lore
 
-Every zombie, the Necromancer, and the world itself have deep backstories rooted in the 1985 film. Run `zombie-hoard lore all` to read the full mythology.
+Every cognitive angle, the Necromancer, and the world itself have backstories
+rooted in the 1985 film. Run `zombie-hoard lore all` to read the full
+mythology.
 
 > *"Do you ever wonder about all the different ways of dying?" — Suicide, before he found out.*
 

@@ -1,7 +1,7 @@
 {
   "name": "openclaw-skill-zombie-hoard",
-  "version": "2.0.0",
-  "description": "Deploy a parallel swarm of zombie LLM agents to deeply learn any topic",
+  "version": "3.0.0",
+  "description": "Grounded research skill: real sources, one honest LLM call, structured cited claims. (Formerly: parallel zombie cosplay.)",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -11,7 +11,7 @@
     "test": "node index.js quick \"JavaScript closures\"",
     "graveyard": "node index.js graveyard",
     "status": "node index.js status",
-    "lint": "node --check index.js lib/llm.js lib/zombie.js lib/hoard.js lib/necromancer.js lib/storage.js lib/display.js lib/lore.js"
+    "lint": "node --check index.js && node --check lib/llm.js && node --check lib/util.js && node --check lib/sources.js && node --check lib/research.js && node --check lib/hoard.js && node --check lib/storage.js && node --check lib/display.js && node --check lib/lore.js"
   },
   "keywords": [
     "openclaw",
