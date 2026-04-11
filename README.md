@@ -1,6 +1,6 @@
-# 🧟 ZOMBIE HOARD v3.0
+# 🧟 ZOMBIE HOARD v3.1
 
-> *One zombie in a trenchcoat. Doing it honestly.*
+> *One zombie in a trenchcoat. Doing it honestly. Now with a web UI.*
 
 An [OpenClaw](https://openclaw.dev) skill by [hellsy.net](https://hellsy.net)
 
@@ -90,6 +90,45 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 
 To force a provider, set `ZOMBIE_PROVIDER=local` or `ZOMBIE_PROVIDER=anthropic`.
 
+## Web UI (v3.1)
+
+There's a full-featured browser UI now. Same architecture (one honest call), but
+the presentation lets the seven facets stage like a proper feeding, with
+character commentary, full bios, and live SSE updates as the run progresses.
+
+```bash
+node index.js serve              # http://127.0.0.1:7331
+node index.js serve 8080         # custom port
+node index.js serve --host 0.0.0.0 --port 9000
+```
+
+What you get:
+
+- **/** — Home: deploy form, recent topics, character roster
+- **/run/&lt;id&gt;** — Live SSE-driven feeding page; phases tick over in
+  real time, then each zombie's section "rises" one by one with their
+  portrait, voice commentary, content, and extracted claims with
+  citations.
+- **/topic/&lt;slug&gt;** — Saved topic view: same rich rendering, loaded
+  from the structured sidecar.
+- **/zombies** — The Hoard: roster of all 7 facets + the Necromancer
+- **/zombies/cortex**, **/zombies/relic**, ... — Per-character bio
+  pages with full lore, voice samples, "how they arrive" lines,
+  "while reading sources" lines, and trademark claim openers.
+- **/necromancer** — Colonel Glover's bio
+- **/lore** — The Hollow: full world backstory + atmospheric quotes
+- **/api/graveyard** — JSON list of all topics
+- **/api/topic/&lt;slug&gt;** — JSON sidecar for one topic
+
+The graphics are deliberately simple (inline SVG portraits, no image
+files, no build step), but the *content* is dense: every page is
+populated with character bios, voice samples, and per-phase commentary
+pulled from `lib/characters.js`. The 7 zombies and the Necromancer
+each have ~5 voice samples, ~3 "arrival" lines, and (for the zombies)
+"while reading sources" + trademark claim opener lines. They're all
+rendered randomly per page load so the UI feels populated by the
+characters, not just the data.
+
 ## Usage
 
 ```bash
@@ -150,7 +189,7 @@ node index.js status
 ## Architecture
 
 ```
-index.js              CLI router + commands
+index.js              CLI router + commands (incl. `serve`)
 lib/
   llm.js              Unified LLM client (local OpenAI-compat → Anthropic fallback)
   sources.js          Wikipedia + URL fetching, HTML→text, source context builder
@@ -160,6 +199,10 @@ lib/
   display.js          Terminal UI (chalk)
   lore.js             Return of the Living Dead mythology
   util.js             Shared helpers (safeInt, jaccard, normalizeText)
+  characters.js       Web UI: per-character data, SVG portraits, voice samples
+  assets.js           Web UI: embedded CSS + client JS (no build step)
+  templates.js        Web UI: HTML page builders
+  server.js           Web UI: native http server, SSE live runs, run state
 ```
 
 ## What's stored on disk

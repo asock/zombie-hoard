@@ -1,6 +1,6 @@
 {
   "name": "openclaw-skill-zombie-hoard",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Grounded research skill: real sources, one honest LLM call, structured cited claims. (Formerly: parallel zombie cosplay.)",
   "main": "index.js",
   "type": "module",
@@ -11,7 +11,8 @@
     "test": "node index.js quick \"JavaScript closures\"",
     "graveyard": "node index.js graveyard",
     "status": "node index.js status",
-    "lint": "node --check index.js && node --check lib/llm.js && node --check lib/util.js && node --check lib/sources.js && node --check lib/research.js && node --check lib/hoard.js && node --check lib/storage.js && node --check lib/display.js && node --check lib/lore.js"
+    "serve": "node index.js serve",
+    "lint": "node --check index.js && node --check lib/llm.js && node --check lib/util.js && node --check lib/sources.js && node --check lib/research.js && node --check lib/hoard.js && node --check lib/storage.js && node --check lib/display.js && node --check lib/lore.js && node --check lib/characters.js && node --check lib/assets.js && node --check lib/templates.js && node --check lib/server.js"
   },
   "keywords": [
     "openclaw",

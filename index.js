@@ -9,6 +9,7 @@ import { Hoard } from './lib/hoard.js';
 import { storage } from './lib/storage.js';
 import { display } from './lib/display.js';
 import { WORLD_LORE, NECROMANCER_LORE, ZOMBIE_LORE } from './lib/lore.js';
+import { startServer } from './lib/server.js';
 
 const VERSION = '3.0.0';
 
@@ -39,7 +40,7 @@ process.on('uncaughtException', (err) => {
 //   --quick              Fetch fewer sources, lower max_tokens
 //
 function parseArgs(rawArgs) {
-  const flags = { urls: [], ungrounded: false, maxSources: null, quick: false };
+  const flags = { urls: [], ungrounded: false, maxSources: null, quick: false, port: null, host: null, open: false };
   const positional = [];
   for (let i = 0; i < rawArgs.length; i++) {
     const a = rawArgs[i];
@@ -52,6 +53,13 @@ function parseArgs(rawArgs) {
       if (!Number.isNaN(n)) flags.maxSources = n;
     } else if (a === '--quick') {
       flags.quick = true;
+    } else if (a === '--port' && rawArgs[i + 1]) {
+      const n = parseInt(rawArgs[++i], 10);
+      if (!Number.isNaN(n)) flags.port = n;
+    } else if (a === '--host' && rawArgs[i + 1]) {
+      flags.host = rawArgs[++i];
+    } else if (a === '--open') {
+      flags.open = true;
     } else {
       positional.push(a);
     }
@@ -209,6 +217,30 @@ function cmdStatus() {
   display.status(storage.stats());
 }
 
+// ── Command: serve [port] ────────────────────────────────────────────────────
+async function cmdServe(positional, flags) {
+  const port = flags.port || parseInt(positional[0], 10) || 7331;
+  const host = flags.host || '127.0.0.1';
+  try {
+    const { url } = await startServer({ port, host });
+    console.log();
+    console.log('  🧟 ZOMBIE HOARD — web UI is rising.');
+    console.log();
+    console.log(`     Open: ${url}`);
+    console.log(`     Stop: ctrl-c`);
+    console.log();
+    console.log('  The graveyard, the seven facets, and Colonel Glover are waiting.');
+    console.log();
+  } catch (err) {
+    if (err.code === 'EADDRINUSE') {
+      display.error(`Port ${port} is already in use. Try: zombie-hoard serve --port ${port + 1}`);
+    } else {
+      display.error(`Failed to start server: ${err.message || err}`);
+    }
+    process.exit(1);
+  }
+}
+
 // ── Help ─────────────────────────────────────────────────────────────────────
 function showHelp() {
   console.log(`
@@ -223,6 +255,7 @@ function showHelp() {
     export <topic>            Print structured JSON to stdout (pipeable)
     compare <A> vs <B>        Compare two topics in the graveyard
     graveyard                 List all stored topics
+    serve [port] [flags]      Start the web UI (default: http://127.0.0.1:7331)
     lore [subject]            Read the mythology of the Hoard
     status                    Show configuration and stats
     version                   Show version
@@ -233,6 +266,10 @@ function showHelp() {
     --no-sources         Skip source fetching (ungrounded mode)
     --max-sources <n>    Cap how many sources to fetch (default: 5)
 
+  FLAGS (for serve):
+    --port <n>           Port to listen on (default: 7331)
+    --host <host>        Bind address (default: 127.0.0.1)
+
   EXAMPLES:
     node index.js learn "TypeScript generics"
     node index.js learn "WebSockets" --max-sources 3
@@ -240,6 +277,9 @@ function showHelp() {
     node index.js infect "TypeScript generics"
     node index.js export "TypeScript generics" > ts.json
     node index.js compare "React vs Vue"
+    node index.js serve
+    node index.js serve 8080
+    node index.js serve --port 9000 --host 0.0.0.0
 
   ENV VARS:
     ZOMBIE_BASE_URL          Local OpenAI-compatible endpoint (default: http://localhost:11434/v1)
@@ -269,6 +309,7 @@ switch (command) {
   case 'compare':   cmdCompare(topic); break;
   case 'lore':      cmdLore(topic); break;
   case 'status':    cmdStatus(); break;
+  case 'serve':     await cmdServe(positional, flags); break;
   case 'version':
   case '--version':
   case '-v':        console.log(`zombie-hoard v${VERSION}`); break;
